@@ -52,6 +52,60 @@ const insertProduct = (product) => {
       });
 };
 
+/// FIND
+const findProducts = (product) => {
+  // Will build the query based on data provided in the form
+  //  Use parameters to avoid sql injection
+
+  // Declare variables
+  let i = 1;
+  const params = [];
+  let sql = "SELECT * FROM product WHERE true";
+
+  // Check data provided and build the query as necessary
+  if (product.prod_id !== "") {
+      params.push(parseInt(product.prod_id));
+      sql += ` AND prod_id = $${i}`;
+      i++;
+  };
+  if (product.prod_name !== "") {
+      params.push(`${product.prod_name}%`);
+      sql += ` AND UPPER(prod_name) LIKE UPPER($${i})`;
+      i++;
+  };
+  if (product.prod_desc !== "") {
+      params.push(`${product.prod_desc}%`);
+      sql += ` AND UPPER(prod_desc) LIKE UPPER($${i})`;
+      i++;
+  };
+  if (product.prod_price !== "") {
+      params.push(parseFloat(product.prod_price));
+      sql += ` AND prod_price >= $${i}`;
+      i++;
+  };
+
+  sql += ` ORDER BY prod_id`;
+  // for debugging
+   console.log("sql: " + sql);
+   console.log("params: " + params);
+
+  return pool.query(sql, params)
+      .then(result => {
+          return { 
+              trans: "success",
+              rows: result.rows
+          }
+      })
+      .catch(err => {
+          return {
+              trans: "Error",
+              error: `Error: ${err.message}`
+          }
+      });
+};
+
+
 // Exported Functions
 module.exports.getTotalRecords = getTotalRecords;
 module.exports.insertProduct = insertProduct;
+module.exports.findProducts = findProducts;
